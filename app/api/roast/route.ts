@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-// Cloudflare Workers Edge runtime flag
 export const runtime = 'edge';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
-});
 
 export async function POST(request: Request) {
   try {
@@ -67,7 +62,6 @@ export async function POST(request: Request) {
       .slice(0, 15)
       .join(', ');
 
-    // Hinglish Roast Prompt
     const prompt = `
       Act as a savage Indian Tech Lead roasting an engineer's LeetCode profile.
       
