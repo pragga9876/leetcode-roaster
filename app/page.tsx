@@ -42,8 +42,8 @@ export default function Home() {
 
     try {
       const dataUrl = await domToPng(cardRef.current, {
-        scale: 2,
-        backgroundColor: '#0f172a',
+        scale: 3,
+        backgroundColor: '#f8fafc',
       });
 
       const link = document.createElement('a');
@@ -57,60 +57,84 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 text-center">
-        <h1 className="text-3xl font-extrabold text-red-500">LeetCode Roast Cards 🔥</h1>
+    <main className="min-h-screen bg-slate-100 text-slate-900 flex flex-col items-center justify-center p-6">
+      <div className="w-full max-w-lg space-y-6">
+        
+        {/* Title Header */}
+        <div className="text-center space-y-1">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight sm:text-4xl">
+            LeetCode Roast
+          </h1>
+          <p className="text-slate-600 text-sm font-medium">
+            Enter a username to roast their LeetCode stats and skills.
+          </p>
+        </div>
 
-        <div className="flex gap-2">
+        {/* Search Input Box */}
+        <div className="bg-white border-2 border-slate-300 rounded-2xl p-2 shadow-sm flex items-center gap-2">
           <input
             type="text"
-            placeholder="Enter LeetCode Username"
+            placeholder="LeetCode Username (e.g. pragga5678)"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="flex-1 px-4 py-3 bg-slate-900 border border-slate-800 rounded-lg text-white outline-none focus:border-red-500"
+            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
+            className="flex-1 bg-transparent px-3 py-2 text-slate-900 font-medium placeholder-slate-400 outline-none text-sm"
           />
           <button
             onClick={handleFetch}
             disabled={loading}
-            className="px-5 py-3 bg-red-600 hover:bg-red-700 font-bold rounded-lg transition disabled:opacity-50"
+            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition disabled:opacity-50"
           >
             {loading ? 'Roasting...' : 'Roast'}
           </button>
         </div>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-center text-xs font-semibold rounded-xl">
+            {error}
+          </div>
+        )}
 
+        {/* Clean Roast Card */}
         {data && (
           <div className="space-y-4">
             <div
               ref={cardRef}
-              className="p-6 bg-slate-900 border-2 border-cyan-400 rounded-2xl shadow-2xl text-center space-y-4"
+              className="bg-white border-2 border-slate-900 rounded-2xl p-6 shadow-md space-y-5 text-slate-900"
             >
-              <h2 className="text-2xl font-bold text-cyan-300">@{data.username}</h2>
+              {/* Username Header */}
+              <div>
+                <h2 className="text-2xl font-black text-slate-900">@{data.username}</h2>
+              </div>
 
-              <div className="flex justify-around py-2 border-y border-slate-800">
+              {/* Stats Box */}
+              <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
                 <div>
-                  <div className="text-xs text-slate-400">Easy</div>
-                  <div className="text-xl font-bold text-green-400">{data.easy}</div>
+                  <div className="text-xs font-bold text-emerald-600 uppercase">EASY</div>
+                  <div className="text-2xl font-black text-slate-900">{data.easy}</div>
+                </div>
+                <div className="border-x border-slate-200">
+                  <div className="text-xs font-bold text-amber-600 uppercase">MEDIUM</div>
+                  <div className="text-2xl font-black text-slate-900">{data.med}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400">Medium</div>
-                  <div className="text-xl font-bold text-yellow-400">{data.med}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400">Hard</div>
-                  <div className="text-xl font-bold text-red-400">{data.hard}</div>
+                  <div className="text-xs font-bold text-red-600 uppercase">HARD</div>
+                  <div className="text-2xl font-black text-slate-900">{data.hard}</div>
                 </div>
               </div>
 
-              <div className="p-4 bg-slate-950/80 rounded-lg border-l-4 border-amber-500 text-left italic text-slate-200">
-                "{data.roast}"
+              {/* Clean Roast Content Box */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p className="text-slate-800 font-semibold text-sm leading-relaxed">
+                  "{data.roast}"
+                </p>
               </div>
             </div>
 
+            {/* Export Action */}
             <button
               onClick={downloadPNG}
-              className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 font-bold rounded-lg transition"
+              className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl transition shadow-sm"
             >
               Download Card PNG
             </button>

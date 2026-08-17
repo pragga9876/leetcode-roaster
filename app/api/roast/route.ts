@@ -13,7 +13,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
-    // 1. Query LeetCode GraphQL for profile stats AND skill/topic tags
     const lcResponse = await fetch('https://leetcode.com/graphql', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -50,7 +49,6 @@ export async function POST(request: Request) {
     const med = stats.find((item: any) => item.difficulty === 'Medium')?.count || 0;
     const hard = stats.find((item: any) => item.difficulty === 'Hard')?.count || 0;
 
-    // 2. Aggregate topic tags into a clean breakdown
     const tagCounts = data.data.matchedUser.tagProblemCounts;
     const allTags = [
       ...(tagCounts?.fundamental || []),
@@ -63,21 +61,21 @@ export async function POST(request: Request) {
       .slice(0, 15)
       .join(', ');
 
-    // 3. Prompt Gemini to roast specific data structure/algorithm skills
+    // Hinglish Roast Prompt
     const prompt = `
-      Act as an brutally hilarious, sarcastic senior software engineer roasting a job candidate based on their LeetCode profile.
+      Act as a savage Indian Tech Lead roasting an engineer's LeetCode profile.
       
       User Metrics:
       - Username: ${username}
       - Easy Solved: ${easy}
       - Medium Solved: ${med}
       - Hard Solved: ${hard}
-      - Topic Breakdown (Problems Solved per Skill): ${tagSummary || 'No topic data available'}
+      - Topics Solved: ${tagSummary || 'No topic data available'}
 
       Guidelines:
-      - Specifically target their weakest or most glaring topic gap (e.g., if Array count is high but Trees/Dynamic Programming/Graphs are 0 or low, roast their fear of trees/DP).
-      - Keep it short, sharp, and funny (maximum 30 words).
-      - Do not wrap the output in quotes or include hashtags.
+      - Write a hilarious 2-3 line roast in contemporary Hinglish (blend of conversational English and colloquial Hindi slang like 'bhai', 'flex', 'aukhaat', 'chhod de', 'LinkedIn wala gyaan').
+      - Target their specific DSA weaknesses (e.g., if DP or Trees are low/zero, or if they only solved Easy/Medium).
+      - Do not use quotes around the output or add hashtags. Keep it under 50 words total.
     `;
 
     const aiResponse = await ai.models.generateContent({
@@ -85,7 +83,7 @@ export async function POST(request: Request) {
       contents: prompt,
     });
 
-    const roast = aiResponse.text?.trim() || 'Your LeetCode profile speaks for itself... and it is not looking good.';
+    const roast = aiResponse.text?.trim() || 'Bhai, LeetCode profile dekh ke HR ne resume dekhe bina hi reject kar diya.';
 
     return NextResponse.json({ username, easy, med, hard, roast });
   } catch (error) {
