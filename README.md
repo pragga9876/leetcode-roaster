@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LeetCode Roast Cards 🔥
+
+A full-stack web application built with Next.js 15, React, and Google Gemini AI that fetches a user's LeetCode profile metrics, skill breakdowns (Arrays, Trees, DP, etc.), and generates a dynamic, AI-powered roast card exportable as a PNG image.
+
+## Features
+
+- **LeetCode GraphQL Integration:** Fetches live submission stats and detailed topic tag breakdowns directly from LeetCode.
+- **AI-Powered Roasts:** Leverages Google Gemini 2.5 Flash to generate context-aware, sarcastic roasts targeting specific data structure weaknesses.
+- **DOM to Image Export:** Uses `modern-screenshot` for clean client-side PNG downloads without canvas parsing errors.
+- **Serverless Architecture:** Built-in Next.js App Router API endpoints to prevent client-side CORS issues.
+
+## Tech Stack
+
+- **Framework:** Next.js (App Router, React)
+- **Language:** TypeScript / JavaScript
+- **Styling:** Tailwind CSS
+- **AI Model:** Google Gemini API (`@google/genai`)
+- **Export Utility:** `modern-screenshot`
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 18+ installed
+- Google Gemini API Key
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file in the root directory and add your key:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+\`\`\`env
+GEMINI_API_KEY=your_gemini_api_key_here
+\`\`\`
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. Install dependencies:
+   \`\`\`bash
+   npm install
+   \`\`\`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Run the development server:
+   \`\`\`bash
+   npm run dev
+   \`\`\`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.

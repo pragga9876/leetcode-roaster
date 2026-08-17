@@ -1,69 +1,122 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useRef } from 'react';
+import { domToPng } from 'modern-screenshot';
 
 export default function Home() {
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<any>(null);
+  const [error, setError] = useState('');
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleFetch = async () => {
+    if (!username.trim()) return;
+    setLoading(true);
+    setError('');
+    setData(null);
+
+    try {
+      const res = await fetch('/api/roast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim() }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.error || 'Something went wrong');
+      } else {
+        setData(result);
+      }
+    } catch (err) {
+      setError('Failed to connect to backend server');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadPNG = async () => {
+    if (!cardRef.current) return;
+
+    try {
+      const dataUrl = await domToPng(cardRef.current, {
+        scale: 2,
+        backgroundColor: '#0f172a',
+      });
+
+      const link = document.createElement('a');
+      link.download = `${data.username}-leetcode-roast.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Download failed:', err);
+      alert('Failed to generate image. Please try again.');
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6 text-center">
+        <h1 className="text-3xl font-extrabold text-red-500">LeetCode Roast Cards 🔥</h1>
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Enter LeetCode Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="flex-1 px-4 py-3 bg-slate-900 border border-slate-800 rounded-lg text-white outline-none focus:border-red-500"
+          />
+          <button
+            onClick={handleFetch}
+            disabled={loading}
+            className="px-5 py-3 bg-red-600 hover:bg-red-700 font-bold rounded-lg transition disabled:opacity-50"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {loading ? 'Roasting...' : 'Roast'}
+          </button>
         </div>
-      </main>
-    </div>
+
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+
+        {data && (
+          <div className="space-y-4">
+            <div
+              ref={cardRef}
+              className="p-6 bg-slate-900 border-2 border-cyan-400 rounded-2xl shadow-2xl text-center space-y-4"
+            >
+              <h2 className="text-2xl font-bold text-cyan-300">@{data.username}</h2>
+
+              <div className="flex justify-around py-2 border-y border-slate-800">
+                <div>
+                  <div className="text-xs text-slate-400">Easy</div>
+                  <div className="text-xl font-bold text-green-400">{data.easy}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Medium</div>
+                  <div className="text-xl font-bold text-yellow-400">{data.med}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Hard</div>
+                  <div className="text-xl font-bold text-red-400">{data.hard}</div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-950/80 rounded-lg border-l-4 border-amber-500 text-left italic text-slate-200">
+                "{data.roast}"
+              </div>
+            </div>
+
+            <button
+              onClick={downloadPNG}
+              className="w-full py-3 bg-cyan-600 hover:bg-cyan-700 font-bold rounded-lg transition"
+            >
+              Download Card PNG
+            </button>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
