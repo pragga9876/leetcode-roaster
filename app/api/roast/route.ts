@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       - Topics Solved: ${tagSummary || 'No topic data available'}
 
       Guidelines:
-      - Write a hilarious 2-3 line roast in contemporary Hinglish (blend of conversational English and colloquial Hindi slang like 'bhai', 'flex', 'aukhaat', 'chhod de', 'LinkedIn wala gyaan').
+      - Write a hilarious 2-3 line roast in contemporary Hinglish (blend of conversational English and colloquial Hindi slang like 'bhai', 'flex', 'aukaat', 'chhod de', 'LinkedIn wala gyaan').
       - Target their specific DSA weaknesses (e.g., if DP or Trees are low/zero, or if they only solved Easy/Medium).
       - Do not use quotes around the output or add hashtags. Keep it under 50 words total.
     `;
