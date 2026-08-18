@@ -1,12 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import html2canvas from 'html2canvas-pro';
 
 export default function Home() {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
+  const [downloading, setDownloading] = useState(false);
+
+  // Ref to target the roast card for PNG export
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleRoast = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +39,28 @@ export default function Home() {
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const downloadPNG = async () => {
+    if (!cardRef.current) return;
+    setDownloading(true);
+
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: '#f4eee1',
+        scale: 2, // High DPI resolution
+      });
+
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `${result?.username || 'leetcode'}-roast.png`;
+      link.click();
+    } catch (err) {
+      console.error('Failed to generate PNG:', err);
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -77,30 +104,42 @@ export default function Home() {
         )}
 
         {result && (
-          <div style={{ border: '1px solid #1a1a1a', padding: '1rem', backgroundColor: '#f4eee1', boxShadow: '3px 3px 0px 0px #1a1a1a' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', textAlign: 'center', paddingBottom: '12px', borderBottom: '1px solid #1a1a1a', fontSize: '11px', fontWeight: 'bold' }}>
-              <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
-                <span style={{ display: 'block', color: '#2e7d32' }}>EASY</span>
-                <span style={{ fontSize: '14px' }}>{result.easy}</span>
+          <div style={{ marginTop: '1rem' }}>
+            {/* The exported card container */}
+            <div ref={cardRef} style={{ border: '1px solid #1a1a1a', padding: '1.25rem', backgroundColor: '#f4eee1', boxShadow: '3px 3px 0px 0px #1a1a1a' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', textAlign: 'center', paddingBottom: '12px', borderBottom: '1px solid #1a1a1a', fontSize: '11px', fontWeight: 'bold' }}>
+                <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
+                  <span style={{ display: 'block', color: '#2e7d32' }}>EASY</span>
+                  <span style={{ fontSize: '14px' }}>{result.easy}</span>
+                </div>
+                <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
+                  <span style={{ display: 'block', color: '#ed6c02' }}>MED</span>
+                  <span style={{ fontSize: '14px' }}>{result.med}</span>
+                </div>
+                <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
+                  <span style={{ display: 'block', color: '#b82619' }}>HARD</span>
+                  <span style={{ fontSize: '14px' }}>{result.hard}</span>
+                </div>
               </div>
-              <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
-                <span style={{ display: 'block', color: '#ed6c02' }}>MED</span>
-                <span style={{ fontSize: '14px' }}>{result.med}</span>
-              </div>
-              <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
-                <span style={{ display: 'block', color: '#b82619' }}>HARD</span>
-                <span style={{ fontSize: '14px' }}>{result.hard}</span>
+
+              <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                <p style={{ fontSize: '10px', color: '#b82619', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  — VERDICT FOR {result.username} —
+                </p>
+                <p style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '16px', color: '#1b2845', fontStyle: 'italic', marginTop: '6px' }}>
+                  "{result.roast}"
+                </p>
               </div>
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: '12px' }}>
-              <p style={{ fontSize: '10px', color: '#b82619', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                — VERDICT FOR {result.username} —
-              </p>
-              <p style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '16px', color: '#1b2845', fontStyle: 'italic', marginTop: '6px' }}>
-                "{result.roast}"
-              </p>
-            </div>
+            {/* Download Button */}
+            <button
+              onClick={downloadPNG}
+              disabled={downloading}
+              style={{ width: '100%', marginTop: '12px', padding: '10px', border: '1px solid #1a1a1a', backgroundColor: '#1b2845', color: '#f4eee1', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '2px 2px 0px 0px #1a1a1a' }}
+            >
+              {downloading ? 'Exporting...' : '📥 Download Card PNG'}
+            </button>
           </div>
         )}
 
