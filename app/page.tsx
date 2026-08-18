@@ -1,145 +1,112 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { domToPng } from 'modern-screenshot';
+import { useState } from 'react';
 
 export default function Home() {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<any>(null);
+  const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
-  const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleFetch = async () => {
+  const handleRoast = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!username.trim()) return;
+
     setLoading(true);
     setError('');
-    setData(null);
+    setResult(null);
 
     try {
       const res = await fetch('/api/roast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim() }),
+        body: JSON.stringify({ username }),
       });
 
-      const result = await res.json();
+      const data = await res.json();
 
       if (!res.ok) {
-        setError(result.error || 'Something went wrong');
-      } else {
-        setData(result);
+        throw new Error(data.error || 'Failed to generate roast');
       }
-    } catch (err) {
-      setError('Failed to connect to backend server');
+
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadPNG = async () => {
-    if (!cardRef.current) return;
-
-    try {
-      const dataUrl = await domToPng(cardRef.current, {
-        scale: 3,
-        backgroundColor: '#f8fafc',
-      });
-
-      const link = document.createElement('a');
-      link.download = `${data.username}-leetcode-roast.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error('Download failed:', err);
-      alert('Failed to generate image. Please try again.');
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-lg space-y-6">
+    <main style={{ minHeight: '100vh', backgroundColor: '#f4eee1', color: '#1b2845', padding: '2rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace' }}>
+      <div style={{ width: '100%', maxWidth: '480px', border: '2px solid #1a1a1a', padding: '2rem', backgroundColor: '#faf6ed', boxShadow: '6px 6px 0px 0px #1a1a1a' }}>
         
-        {/* Title Header */}
-        <div className="text-center space-y-1">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight sm:text-4xl">
+        <div style={{ borderBottom: '1px solid #1a1a1a', paddingBottom: '1rem', marginBottom: '1.5rem', textAlign: 'center' }}>
+          <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', color: '#b82619', fontWeight: 'bold', marginBottom: '4px' }}>
+            ✦ SPECIAL EDITION PRINT ✦
+          </p>
+          <h1 style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '2rem', fontWeight: '900', color: '#1b2845', textTransform: 'uppercase', margin: 0 }}>
             LeetCode Roast
           </h1>
-          <p className="text-slate-600 text-sm font-medium">
-            Enter a username to roast their LeetCode stats and skills.
+          <p style={{ fontSize: '12px', color: '#555', marginTop: '6px', fontStyle: 'italic' }}>
+            Enter a LeetCode handle for an instant vintage evaluation
           </p>
         </div>
 
-        {/* Search Input Box */}
-        <div className="bg-white border-2 border-slate-300 rounded-2xl p-2 shadow-sm flex items-center gap-2">
+        <form onSubmit={handleRoast} style={{ marginBottom: '1.5rem' }}>
           <input
             type="text"
-            placeholder="LeetCode Username (e.g. pragga5678)"
+            placeholder="e.g. pragga5678"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
-            className="flex-1 bg-transparent px-3 py-2 text-slate-900 font-medium placeholder-slate-400 outline-none text-sm"
+            style={{ width: '100%', padding: '10px', border: '1px solid #1a1a1a', backgroundColor: '#f4eee1', color: '#1b2845', fontSize: '14px', marginBottom: '10px', boxSizing: 'border-box' }}
           />
           <button
-            onClick={handleFetch}
+            type="submit"
             disabled={loading}
-            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition disabled:opacity-50"
+            style={{ width: '100%', padding: '10px', border: '1px solid #1a1a1a', backgroundColor: '#b82619', color: '#f4eee1', fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '2px 2px 0px 0px #1a1a1a' }}
           >
-            {loading ? 'Roasting...' : 'Roast'}
+            {loading ? 'Analyzing Stats...' : '☎ Generate Roast'}
           </button>
-        </div>
+        </form>
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-center text-xs font-semibold rounded-xl">
-            {error}
+          <div style={{ padding: '10px', marginBottom: '1.5rem', border: '1px solid #b82619', backgroundColor: '#fdf2f2', color: '#b82619', fontSize: '12px', textAlign: 'center', fontWeight: 'bold' }}>
+            ⚠ {error}
           </div>
         )}
 
-        {/* Clean Roast Card */}
-        {data && (
-          <div className="space-y-4">
-            <div
-              ref={cardRef}
-              className="bg-white border-2 border-slate-900 rounded-2xl p-6 shadow-md space-y-5 text-slate-900"
-            >
-              {/* Username Header */}
-              <div>
-                <h2 className="text-2xl font-black text-slate-900">@{data.username}</h2>
+        {result && (
+          <div style={{ border: '1px solid #1a1a1a', padding: '1rem', backgroundColor: '#f4eee1', boxShadow: '3px 3px 0px 0px #1a1a1a' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', textAlign: 'center', paddingBottom: '12px', borderBottom: '1px solid #1a1a1a', fontSize: '11px', fontWeight: 'bold' }}>
+              <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
+                <span style={{ display: 'block', color: '#2e7d32' }}>EASY</span>
+                <span style={{ fontSize: '14px' }}>{result.easy}</span>
               </div>
-
-              {/* Stats Box */}
-              <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
-                <div>
-                  <div className="text-xs font-bold text-emerald-600 uppercase">EASY</div>
-                  <div className="text-2xl font-black text-slate-900">{data.easy}</div>
-                </div>
-                <div className="border-x border-slate-200">
-                  <div className="text-xs font-bold text-amber-600 uppercase">MEDIUM</div>
-                  <div className="text-2xl font-black text-slate-900">{data.med}</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-red-600 uppercase">HARD</div>
-                  <div className="text-2xl font-black text-slate-900">{data.hard}</div>
-                </div>
+              <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
+                <span style={{ display: 'block', color: '#ed6c02' }}>MED</span>
+                <span style={{ fontSize: '14px' }}>{result.med}</span>
               </div>
-
-              {/* Clean Roast Content Box */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <p className="text-slate-800 font-semibold text-sm leading-relaxed">
-                  "{data.roast}"
-                </p>
+              <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
+                <span style={{ display: 'block', color: '#b82619' }}>HARD</span>
+                <span style={{ fontSize: '14px' }}>{result.hard}</span>
               </div>
             </div>
 
-            {/* Export Action */}
-            <button
-              onClick={downloadPNG}
-              className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl transition shadow-sm"
-            >
-              Download Card PNG
-            </button>
+            <div style={{ textAlign: 'center', marginTop: '12px' }}>
+              <p style={{ fontSize: '10px', color: '#b82619', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                — VERDICT FOR {result.username} —
+              </p>
+              <p style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '16px', color: '#1b2845', fontStyle: 'italic', marginTop: '6px' }}>
+                "{result.roast}"
+              </p>
+            </div>
           </div>
         )}
+
+        <div style={{ marginTop: '1.5rem', paddingTop: '12px', borderTop: '1px dashed #888', textAlign: 'center', fontSize: '10px', color: '#777' }}>
+          leetcode-roaster v1.0
+        </div>
       </div>
     </main>
   );

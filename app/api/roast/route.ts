@@ -1,34 +1,30 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import Groq from 'groq-sdk';
 
-const apiKey = process.env.GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { username } = await request.json();
+    const { username } = await req.json();
 
     if (!username) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
-    const lcResponse = await fetch('https://leetcode.com/graphql', {
+    // 1. Fetch statistics from LeetCode GraphQL
+    const lcRes = await fetch('https://leetcode.com/graphql', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
-          query userProfileAndSkills($username: String!) {
+          query getUserProfile($username: String!) {
             matchedUser(username: $username) {
-              submitStatsGlobal {
+              username
+              submitStats {
                 acSubmissionNum {
                   difficulty
                   count
                 }
-              }
-              tagProblemCounts {
-                fundamental { tagName problemsSolved }
-                intermediate { tagName problemsSolved }
-                advanced { tagName problemsSolved }
               }
             }
           }
@@ -37,55 +33,33 @@ export async function POST(request: Request) {
       }),
     });
 
-    const data = await lcResponse.json();
+    const lcData = await lcRes.json();
+    const user = lcData?.data?.matchedUser;
 
-    if (!data.data || !data.data.matchedUser) {
-      return NextResponse.json({ error: 'LeetCode user not found' }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ error: 'LeetCode user not found!' }, { status: 404 });
     }
 
-    const stats = data.data.matchedUser.submitStatsGlobal.acSubmissionNum;
-    const easy = stats.find((item: any) => item.difficulty === 'Easy')?.count || 0;
-    const med = stats.find((item: any) => item.difficulty === 'Medium')?.count || 0;
-    const hard = stats.find((item: any) => item.difficulty === 'Hard')?.count || 0;
+    const stats = user.submitStats.acSubmissionNum;
+    const easy = stats.find((s: any) => s.difficulty === 'Easy')?.count || 0;
+    const med = stats.find((s: any) => s.difficulty === 'Medium')?.count || 0;
+    const hard = stats.find((s: any) => s.difficulty === 'Hard')?.count || 0;
 
-    const tagCounts = data.data.matchedUser.tagProblemCounts;
-    const allTags = [
-      ...(tagCounts?.fundamental || []),
-      ...(tagCounts?.intermediate || []),
-      ...(tagCounts?.advanced || []),
-    ];
-
-    const tagSummary = allTags
-      .map((t: any) => `${t.tagName}: ${t.problemsSolved}`)
-      .slice(0, 15)
-      .join(', ');
-
-    const prompt = `
-      Act as a savage Indian Tech Lead roasting an engineer's LeetCode profile.
-      
-      User Metrics:
-      - Username: ${username}
-      - Easy Solved: ${easy}
-      - Medium Solved: ${med}
-      - Hard Solved: ${hard}
-      - Topics Solved: ${tagSummary || 'No topic data available'}
-
-      Guidelines:
-      - Write a hilarious 2-3 line roast in contemporary Hinglish (blend of conversational English and colloquial Hindi slang like 'bhai', 'flex', 'aukaat', 'chhod de', 'LinkedIn wala gyaan').
-      - Target their specific DSA weaknesses (e.g., if DP or Trees are low/zero, or if they only solved Easy/Medium).
-      - Do not use quotes around the output or add hashtags. Keep it under 50 words total.
-    `;
-
-    const aiResponse = await ai.models.generateContent({
-      model: 'models/gemini-2.5-flash',
-      contents: prompt,
+    // 2. Request completion via Groq
+    const completion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: 'user',
+          content: `You are a savage, funny tech interviewer. Write a 2-sentence savage roast in Hinglish for a LeetCoder named ${username} who solved: Easy: ${easy}, Medium: ${med}, Hard: ${hard}. Keep it witty and concise.`,
+        },
+      ],
+      model: 'openai/gpt-oss-20b', // Active Groq production model ID
     });
 
-    const roast = aiResponse.text?.trim() || 'Bhai, LeetCode profile dekh ke HR ne resume dekhe bina hi reject kar diya.';
+    const roast = completion.choices[0]?.message?.content || 'No roast generated.';
 
     return NextResponse.json({ username, easy, med, hard, roast });
-  } catch (error) {
-    console.error('API Error:', error);
-    return NextResponse.json({ error: 'Failed to generate roast' }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
 }
