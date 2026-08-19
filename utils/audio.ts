@@ -1,38 +1,21 @@
-// Web Audio Synthesizer for tactile feedback
+// Local Clean Meme Sound Effect
 export function playCardSwish() {
   if (typeof window === 'undefined') return;
-  
-  const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-  if (!AudioCtx) return;
-  
-  const ctx = new AudioCtx();
-  const bufferSize = ctx.sampleRate * 0.15;
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const output = buffer.getChannelData(0);
-  
-  for (let i = 0; i < bufferSize; i++) {
-    output[i] = Math.random() * 2 - 1;
+
+  const audio = new Audio('/fahhh.mp3');
+  audio.volume = 0.9;
+
+  // Play immediately
+  const playPromise = audio.play();
+
+  if (playPromise !== undefined) {
+    playPromise.catch((err) => {
+      console.warn('Audio playback blocked by browser interaction rules:', err);
+    });
   }
-
-  const whiteNoise = ctx.createBufferSource();
-  whiteNoise.buffer = buffer;
-
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(800, ctx.currentTime);
-  filter.frequency.exponentialRampToValueAtTime(3000, ctx.currentTime + 0.15);
-
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-
-  whiteNoise.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-
-  whiteNoise.start();
 }
 
+// Slap sound trigger
 export function playCardSlap() {
   if (typeof window === 'undefined') return;
 
@@ -44,10 +27,10 @@ export function playCardSlap() {
   const gain = ctx.createGain();
 
   osc.type = 'triangle';
-  osc.frequency.setValueAtTime(120, ctx.currentTime);
+  osc.frequency.setValueAtTime(140, ctx.currentTime);
   osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.12);
 
-  gain.gain.setValueAtTime(0.6, ctx.currentTime);
+  gain.gain.setValueAtTime(0.7, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
 
   osc.connect(gain);
