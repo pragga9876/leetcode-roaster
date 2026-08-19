@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas-pro';
+import { getCardTheme } from '@/utils/themes';
+import { playCardSwish, playCardSlap, speakHinglishRoast } from '@/utils/audio';
 
 export default function Home() {
   const [username, setUsername] = useState('');
@@ -10,8 +12,20 @@ export default function Home() {
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Pre-load Web Speech voices
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+    }
+  }, []);
+
+  const theme = result
+    ? getCardTheme(result.easy || 0, result.med || 0, result.hard || 0)
+    : getCardTheme(0, 0, 1);
 
   const handleRoast = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,12 +49,25 @@ export default function Home() {
       }
 
       setResult(data);
-      setTimeout(() => setIsFlipped(true), 150);
+
+      // Trigger Audio Triggers during 3D Flip
+      playCardSwish();
+      setTimeout(() => {
+        setIsFlipped(true);
+        playCardSlap();
+      }, 150);
+
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePlayAudio = () => {
+    if (!result?.roast) return;
+    setIsPlayingAudio(true);
+    speakHinglishRoast(result.roast, () => setIsPlayingAudio(false));
   };
 
   const downloadPNG = async () => {
@@ -97,11 +124,11 @@ export default function Home() {
         )}
       </div>
 
-      {/* 3D Playing Card Frame */}
+      {/* 3D Playing Card Outer Shell */}
       <div className="perspective-1000" style={{ width: '380px', height: '560px' }}>
         <div className={`transform-style-3d ${isFlipped ? 'flipped' : ''}`} style={{ width: '100%', height: '100%', position: 'relative' }}>
           
-          {/* ================= CARD BACK (UNFLIPPED) ================= */}
+          {/* CARD BACK */}
           <div className="backface-hidden" style={{ position: 'absolute', top: 0, left: 0, width: '380px', height: '560px', border: '4px solid #111', borderRadius: '16px', backgroundColor: '#F5C242', padding: '12px', boxShadow: '8px 8px 0px 0px #111', boxSizing: 'border-box' }}>
             <div style={{ border: '2px dashed #111', width: '100%', height: '100%', borderRadius: '10px', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFDF5', textAlign: 'center', boxSizing: 'border-box' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '12px', letterSpacing: '4px' }}>♠ ♥ ♦ ♣</div>
@@ -114,14 +141,34 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ================= CARD FRONT (FLIPPED ROAST) ================= */}
+          {/* CARD FRONT */}
           <div className="backface-hidden rotate-y-180" style={{ position: 'absolute', top: 0, left: 0, width: '380px', height: '560px' }}>
-            <div ref={cardRef} style={{ border: '4px solid #111', borderRadius: '16px', backgroundColor: '#FFFDF5', padding: '1rem', boxShadow: '8px 8px 0px 0px #111', width: '380px', height: '560px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative' }}>
-              
-              {/* TOP CORNERS: Spades (Black Left) & Hearts (Red Right) */}
+            <div
+              ref={cardRef}
+              className={theme.extraCss || ''}
+              style={{
+                border: `4px solid ${theme.cardBorder}`,
+                borderRadius: '16px',
+                backgroundColor: theme.innerBg,
+                padding: '1rem',
+                boxShadow: `8px 8px 0px 0px ${theme.cardBorder}`,
+                width: '380px',
+                height: '560px',
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'column',
+                justify: 'space-between',
+                position: 'relative',
+                color: theme.textColor,
+              }}
+            >
+              {/* TOP CORNERS */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '24px' }}>
-                <span style={{ fontSize: '22px', color: '#111', lineHeight: 1 }}>♠</span>
-                <span style={{ fontSize: '22px', color: '#b82619', lineHeight: 1 }}>♥</span>
+                <span style={{ fontSize: '22px', color: theme.suitBlack, lineHeight: 1 }}>♠</span>
+                <span style={{ fontSize: '10px', fontWeight: 'bold', letterSpacing: '0.5px', color: theme.accentColor }}>
+                  {theme.badge}
+                </span>
+                <span style={{ fontSize: '22px', color: theme.suitRed, lineHeight: 1 }}>♥</span>
               </div>
 
               {/* Avatar & Username */}
@@ -130,10 +177,10 @@ export default function Home() {
                   <img
                     src={result.avatar}
                     alt={result.username}
-                    style={{ width: '68px', height: '68px', borderRadius: '50%', border: '3px solid #111', margin: '0 auto 4px', display: 'block', objectFit: 'cover' }}
+                    style={{ width: '68px', height: '68px', borderRadius: '50%', border: `3px solid ${theme.cardBorder}`, margin: '0 auto 4px', display: 'block', objectFit: 'cover' }}
                   />
                 ) : (
-                  <div style={{ width: '68px', height: '68px', borderRadius: '50%', border: '3px solid #111', backgroundColor: '#F5C242', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '24px' }}>
+                  <div style={{ width: '68px', height: '68px', borderRadius: '50%', border: `3px solid ${theme.cardBorder}`, backgroundColor: '#F5C242', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '24px' }}>
                     🃏
                   </div>
                 )}
@@ -144,34 +191,50 @@ export default function Home() {
 
               {/* Stats Breakdown */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', textAlign: 'center', margin: '2px 0' }}>
-                <div style={{ padding: '5px', border: '2px solid #111', backgroundColor: '#f4eee1', borderRadius: '6px' }}>
+                <div style={{ padding: '5px', border: `2px solid ${theme.cardBorder}`, backgroundColor: theme.id === 'joker' ? '#262626' : '#f4eee1', borderRadius: '6px' }}>
                   <span style={{ display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#2e7d32' }}>EASY</span>
                   <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{result?.easy || 0}</span>
                 </div>
-                <div style={{ padding: '5px', border: '2px solid #111', backgroundColor: '#f4eee1', borderRadius: '6px' }}>
+                <div style={{ padding: '5px', border: `2px solid ${theme.cardBorder}`, backgroundColor: theme.id === 'joker' ? '#262626' : '#f4eee1', borderRadius: '6px' }}>
                   <span style={{ display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#ed6c02' }}>MED</span>
                   <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{result?.med || 0}</span>
                 </div>
-                <div style={{ padding: '5px', border: '2px solid #111', backgroundColor: '#f4eee1', borderRadius: '6px' }}>
+                <div style={{ padding: '5px', border: `2px solid ${theme.cardBorder}`, backgroundColor: theme.id === 'joker' ? '#262626' : '#f4eee1', borderRadius: '6px' }}>
                   <span style={{ display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#b82619' }}>HARD</span>
                   <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{result?.hard || 0}</span>
                 </div>
               </div>
 
-              {/* Verdict Section with Auto-Fit Scrolling/Flex */}
-              <div style={{ border: '2px solid #111', padding: '10px 8px', backgroundColor: '#F5C242', borderRadius: '8px', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', margin: '4px 0', minHeight: 0, overflow: 'hidden' }}>
-                <p style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px', color: '#111' }}>
+              {/* Verdict Section */}
+              <div
+                style={{
+                  border: `2px solid ${theme.cardBorder}`,
+                  padding: '10px 8px',
+                  backgroundColor: theme.verdictBg,
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justify: 'center',
+                  alignItems: 'center',
+                  margin: '4px 0',
+                  minHeight: 0,
+                  overflow: 'hidden',
+                }}
+              >
+                <p style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px', color: theme.verdictText }}>
                   — VERDICT —
                 </p>
-                <p style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '12.5px', fontStyle: 'italic', margin: 0, lineHeight: '1.35', fontWeight: '700', color: '#111', overflowY: 'auto', maxHeight: '100%' }}>
+                <p style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '12.5px', fontStyle: 'italic', margin: 0, lineHeight: '1.35', fontWeight: '700', color: theme.verdictText, overflowY: 'auto', maxHeight: '100%' }}>
                   {result?.roast}
                 </p>
               </div>
 
-              {/* BOTTOM CORNERS: Diamonds (Red Left) & Clubs (Black Right) */}
+              {/* BOTTOM CORNERS */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '24px' }}>
-                <span style={{ fontSize: '22px', color: '#b82619', lineHeight: 1 }}>♦</span>
-                <span style={{ fontSize: '22px', color: '#111', lineHeight: 1 }}>♣</span>
+                <span style={{ fontSize: '22px', color: theme.suitRed, lineHeight: 1 }}>♦</span>
+                <span style={{ fontSize: '22px', color: theme.suitBlack, lineHeight: 1 }}>♣</span>
               </div>
 
             </div>
@@ -180,15 +243,25 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Export PNG */}
+      {/* Action Buttons */}
       {result && isFlipped && (
-        <button
-          onClick={downloadPNG}
-          disabled={downloading}
-          style={{ width: '100%', maxWidth: '380px', marginTop: '1.5rem', padding: '12px', border: '3px solid #111', backgroundColor: '#111', color: '#F5C242', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '4px 4px 0px 0px #F5C242' }}
-        >
-          {downloading ? 'Exporting Card...' : 'Download Playing Card PNG'}
-        </button>
+        <div style={{ width: '100%', maxWidth: '380px', marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button
+            onClick={handlePlayAudio}
+            disabled={isPlayingAudio}
+            style={{ padding: '12px', border: '3px solid #111', backgroundColor: '#F5C242', color: '#111', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '4px 4px 0px 0px #111' }}
+          >
+            {isPlayingAudio ? 'Reading Roast...' : 'Play Roast Audio'}
+          </button>
+
+          <button
+            onClick={downloadPNG}
+            disabled={downloading}
+            style={{ padding: '12px', border: '3px solid #111', backgroundColor: '#111', color: '#F5C242', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '4px 4px 0px 0px #F5C242' }}
+          >
+            {downloading ? 'Exporting Card...' : 'Download Playing Card PNG'}
+          </button>
+        </div>
       )}
     </main>
   );

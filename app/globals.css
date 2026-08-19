@@ -32,3 +32,22 @@ body {
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
+
+@keyframes holoShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.holo-shimmer {
+  background: linear-gradient(
+    115deg,
+    #f3e8ff 0%,
+    #dbeafe 25%,
+    #fce7f3 50%,
+    #e0e7ff 75%,
+    #f3e8ff 100%
+  ) !important;
+  background-size: 200% 200% !important;
+  animation: holoShift 6s ease infinite;
+}
