@@ -232,7 +232,3 @@ git commit -m "Describe your changes here"
 git push origin main
 
 ```
-
-```
-
-```
