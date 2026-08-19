@@ -157,7 +157,7 @@ export default function Home() {
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
-                justify: 'space-between',
+                justifyContent: 'space-between',
                 position: 'relative',
                 color: theme.textColor,
               }}
@@ -216,7 +216,7 @@ export default function Home() {
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  justify: 'center',
+                  justifyContent: 'center',
                   alignItems: 'center',
                   margin: '4px 0',
                   minHeight: 0,
