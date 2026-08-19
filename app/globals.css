@@ -4,38 +4,31 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg-cream: #f4eee1;
-  --bg-card: #faf6ed;
-  --vintage-navy: #1b2845;
-  --vintage-red: #b82619;
-  --vintage-green: #2e7d32;
-  --vintage-orange: #ed6c02;
-  --vintage-border: #1a1a1a;
-}
-
 body {
-  background-color: var(--bg-cream);
-  color: var(--vintage-navy);
+  background-color: #f0e6d2;
+  color: #111111;
   font-family: 'Courier Prime', Courier, monospace;
 }
 
-.font-deco {
-  font-family: 'Playfair Display', Georgia, serif;
+/* 3D Playing Card Flip Classes */
+.perspective-1000 {
+  perspective: 1000px;
 }
 
-/* Custom Vintage Keyframe Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.transform-style-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.flipped {
+  transform: rotateY(180deg);
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
 }

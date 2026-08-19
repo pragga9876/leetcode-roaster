@@ -9,8 +9,8 @@ export default function Home() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
 
-  // Ref to target the roast card for PNG export
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleRoast = async (e: React.FormEvent) => {
@@ -19,7 +19,7 @@ export default function Home() {
 
     setLoading(true);
     setError('');
-    setResult(null);
+    setIsFlipped(false);
 
     try {
       const res = await fetch('/api/roast', {
@@ -35,6 +35,7 @@ export default function Home() {
       }
 
       setResult(data);
+      setTimeout(() => setIsFlipped(true), 150);
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -48,14 +49,15 @@ export default function Home() {
 
     try {
       const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#f4eee1',
-        scale: 2, // High DPI resolution
+        backgroundColor: '#f0e6d2',
+        scale: 2,
+        useCORS: true,
       });
 
       const image = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = image;
-      link.download = `${result?.username || 'leetcode'}-roast.png`;
+      link.download = `${result?.username || 'leetcode'}-roast-card.png`;
       link.click();
     } catch (err) {
       console.error('Failed to generate PNG:', err);
@@ -65,88 +67,129 @@ export default function Home() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', backgroundColor: '#f4eee1', color: '#1b2845', padding: '2rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace' }}>
-      <div style={{ width: '100%', maxWidth: '480px', border: '2px solid #1a1a1a', padding: '2rem', backgroundColor: '#faf6ed', boxShadow: '6px 6px 0px 0px #1a1a1a' }}>
-        
-        <div style={{ borderBottom: '1px solid #1a1a1a', paddingBottom: '1rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-          <p style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', color: '#b82619', fontWeight: 'bold', marginBottom: '4px' }}>
-            ✦ SPECIAL EDITION PRINT ✦
-          </p>
-          <h1 style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '2rem', fontWeight: '900', color: '#1b2845', textTransform: 'uppercase', margin: 0 }}>
-            LeetCode Roast
-          </h1>
-          <p style={{ fontSize: '12px', color: '#555', marginTop: '6px', fontStyle: 'italic' }}>
-            Enter a LeetCode handle for an instant vintage evaluation
-          </p>
-        </div>
-
-        <form onSubmit={handleRoast} style={{ marginBottom: '1.5rem' }}>
-          <input
-            type="text"
-            placeholder="e.g. pragga5678"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={{ width: '100%', padding: '10px', border: '1px solid #1a1a1a', backgroundColor: '#f4eee1', color: '#1b2845', fontSize: '14px', marginBottom: '10px', boxSizing: 'border-box' }}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', padding: '10px', border: '1px solid #1a1a1a', backgroundColor: '#b82619', color: '#f4eee1', fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '2px 2px 0px 0px #1a1a1a' }}
-          >
-            {loading ? 'Analyzing Stats...' : '☎ Generate Roast'}
-          </button>
+    <main style={{ minHeight: '100vh', backgroundColor: '#f0e6d2', color: '#111', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Courier Prime, monospace' }}>
+      
+      {/* Input Form */}
+      <div style={{ width: '100%', maxWidth: '380px', marginBottom: '1.5rem' }}>
+        <form onSubmit={handleRoast}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input
+              type="text"
+              placeholder="your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={{ flex: 1, padding: '12px', border: '3px solid #111', backgroundColor: '#fff', color: '#111', fontSize: '14px', fontWeight: 'bold', outline: 'none', boxShadow: '3px 3px 0px 0px #111' }}
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ padding: '12px 18px', border: '3px solid #111', backgroundColor: '#F5C242', color: '#111', fontWeight: 'bold', fontSize: '14px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '3px 3px 0px 0px #111' }}
+            >
+              {loading ? 'Shuffling...' : '♠ Roast'}
+            </button>
+          </div>
         </form>
 
         {error && (
-          <div style={{ padding: '10px', marginBottom: '1.5rem', border: '1px solid #b82619', backgroundColor: '#fdf2f2', color: '#b82619', fontSize: '12px', textAlign: 'center', fontWeight: 'bold' }}>
+          <div style={{ marginTop: '12px', padding: '10px', border: '2px solid #b82619', backgroundColor: '#fdf2f2', color: '#b82619', fontSize: '12px', textAlign: 'center', fontWeight: 'bold' }}>
             ⚠ {error}
           </div>
         )}
+      </div>
 
-        {result && (
-          <div style={{ marginTop: '1rem' }}>
-            {/* The exported card container */}
-            <div ref={cardRef} style={{ border: '1px solid #1a1a1a', padding: '1.25rem', backgroundColor: '#f4eee1', boxShadow: '3px 3px 0px 0px #1a1a1a' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', textAlign: 'center', paddingBottom: '12px', borderBottom: '1px solid #1a1a1a', fontSize: '11px', fontWeight: 'bold' }}>
-                <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
-                  <span style={{ display: 'block', color: '#2e7d32' }}>EASY</span>
-                  <span style={{ fontSize: '14px' }}>{result.easy}</span>
-                </div>
-                <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
-                  <span style={{ display: 'block', color: '#ed6c02' }}>MED</span>
-                  <span style={{ fontSize: '14px' }}>{result.med}</span>
-                </div>
-                <div style={{ padding: '6px', border: '1px solid #1a1a1a', backgroundColor: '#faf6ed' }}>
-                  <span style={{ display: 'block', color: '#b82619' }}>HARD</span>
-                  <span style={{ fontSize: '14px' }}>{result.hard}</span>
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'center', marginTop: '12px' }}>
-                <p style={{ fontSize: '10px', color: '#b82619', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  — VERDICT FOR {result.username} —
-                </p>
-                <p style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '16px', color: '#1b2845', fontStyle: 'italic', marginTop: '6px' }}>
-                  "{result.roast}"
-                </p>
-              </div>
+      {/* 3D Playing Card Frame */}
+      <div className="perspective-1000" style={{ width: '380px', height: '560px' }}>
+        <div className={`transform-style-3d ${isFlipped ? 'flipped' : ''}`} style={{ width: '100%', height: '100%', position: 'relative' }}>
+          
+          {/* ================= CARD BACK (UNFLIPPED) ================= */}
+          <div className="backface-hidden" style={{ position: 'absolute', top: 0, left: 0, width: '380px', height: '560px', border: '4px solid #111', borderRadius: '16px', backgroundColor: '#F5C242', padding: '12px', boxShadow: '8px 8px 0px 0px #111', boxSizing: 'border-box' }}>
+            <div style={{ border: '2px dashed #111', width: '100%', height: '100%', borderRadius: '10px', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFDF5', textAlign: 'center', boxSizing: 'border-box' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '12px', letterSpacing: '4px' }}>♠ ♥ ♦ ♣</div>
+              <h1 style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '1.8rem', fontWeight: '900', margin: '0', textTransform: 'uppercase' }}>
+                LEETCODE DECK
+              </h1>
+              <p style={{ fontSize: '11px', color: '#666', marginTop: '14px', fontStyle: 'italic', maxWidth: '220px', lineHeight: '1.4' }}>
+                Enter your username above to flip the card and reveal your roast
+              </p>
             </div>
-
-            {/* Download Button */}
-            <button
-              onClick={downloadPNG}
-              disabled={downloading}
-              style={{ width: '100%', marginTop: '12px', padding: '10px', border: '1px solid #1a1a1a', backgroundColor: '#1b2845', color: '#f4eee1', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '2px 2px 0px 0px #1a1a1a' }}
-            >
-              {downloading ? 'Exporting...' : '📥 Download Card PNG'}
-            </button>
           </div>
-        )}
 
-        <div style={{ marginTop: '1.5rem', paddingTop: '12px', borderTop: '1px dashed #888', textAlign: 'center', fontSize: '10px', color: '#777' }}>
-          leetcode-roaster v1.0
+          {/* ================= CARD FRONT (FLIPPED ROAST) ================= */}
+          <div className="backface-hidden rotate-y-180" style={{ position: 'absolute', top: 0, left: 0, width: '380px', height: '560px' }}>
+            <div ref={cardRef} style={{ border: '4px solid #111', borderRadius: '16px', backgroundColor: '#FFFDF5', padding: '1rem', boxShadow: '8px 8px 0px 0px #111', width: '380px', height: '560px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative' }}>
+              
+              {/* TOP CORNERS: Spades (Black Left) & Hearts (Red Right) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '24px' }}>
+                <span style={{ fontSize: '22px', color: '#111', lineHeight: 1 }}>♠</span>
+                <span style={{ fontSize: '22px', color: '#b82619', lineHeight: 1 }}>♥</span>
+              </div>
+
+              {/* Avatar & Username */}
+              <div style={{ textAlign: 'center', margin: '2px 0' }}>
+                {result?.avatar ? (
+                  <img
+                    src={result.avatar}
+                    alt={result.username}
+                    style={{ width: '68px', height: '68px', borderRadius: '50%', border: '3px solid #111', margin: '0 auto 4px', display: 'block', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{ width: '68px', height: '68px', borderRadius: '50%', border: '3px solid #111', backgroundColor: '#F5C242', margin: '0 auto 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '24px' }}>
+                    🃏
+                  </div>
+                )}
+                <h2 style={{ fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', margin: 0, letterSpacing: '0.5px' }}>
+                  {result?.username}
+                </h2>
+              </div>
+
+              {/* Stats Breakdown */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', textAlign: 'center', margin: '2px 0' }}>
+                <div style={{ padding: '5px', border: '2px solid #111', backgroundColor: '#f4eee1', borderRadius: '6px' }}>
+                  <span style={{ display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#2e7d32' }}>EASY</span>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{result?.easy || 0}</span>
+                </div>
+                <div style={{ padding: '5px', border: '2px solid #111', backgroundColor: '#f4eee1', borderRadius: '6px' }}>
+                  <span style={{ display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#ed6c02' }}>MED</span>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{result?.med || 0}</span>
+                </div>
+                <div style={{ padding: '5px', border: '2px solid #111', backgroundColor: '#f4eee1', borderRadius: '6px' }}>
+                  <span style={{ display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#b82619' }}>HARD</span>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold' }}>{result?.hard || 0}</span>
+                </div>
+              </div>
+
+              {/* Verdict Section with Auto-Fit Scrolling/Flex */}
+              <div style={{ border: '2px solid #111', padding: '10px 8px', backgroundColor: '#F5C242', borderRadius: '8px', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', margin: '4px 0', minHeight: 0, overflow: 'hidden' }}>
+                <p style={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px', color: '#111' }}>
+                  — VERDICT —
+                </p>
+                <p style={{ fontFamily: 'Playfair Display, Georgia, serif', fontSize: '12.5px', fontStyle: 'italic', margin: 0, lineHeight: '1.35', fontWeight: '700', color: '#111', overflowY: 'auto', maxHeight: '100%' }}>
+                  {result?.roast}
+                </p>
+              </div>
+
+              {/* BOTTOM CORNERS: Diamonds (Red Left) & Clubs (Black Right) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '24px' }}>
+                <span style={{ fontSize: '22px', color: '#b82619', lineHeight: 1 }}>♦</span>
+                <span style={{ fontSize: '22px', color: '#111', lineHeight: 1 }}>♣</span>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </div>
+
+      {/* Export PNG */}
+      {result && isFlipped && (
+        <button
+          onClick={downloadPNG}
+          disabled={downloading}
+          style={{ width: '100%', maxWidth: '380px', marginTop: '1.5rem', padding: '12px', border: '3px solid #111', backgroundColor: '#111', color: '#F5C242', fontWeight: 'bold', fontSize: '13px', textTransform: 'uppercase', cursor: 'pointer', boxShadow: '4px 4px 0px 0px #F5C242' }}
+        >
+          {downloading ? 'Exporting Card...' : 'Download Playing Card PNG'}
+        </button>
+      )}
     </main>
   );
 }
