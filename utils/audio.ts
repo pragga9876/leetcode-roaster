@@ -1,12 +1,15 @@
 // Web Audio Synthesizer for tactile feedback
 export function playCardSwish() {
   if (typeof window === 'undefined') return;
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   
-  // White noise buffer for swish sound
-  const bufferSize = ctx.sampleRate * 0.15; // 150ms
+  const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!AudioCtx) return;
+  
+  const ctx = new AudioCtx();
+  const bufferSize = ctx.sampleRate * 0.15;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const output = buffer.getChannelData(0);
+  
   for (let i = 0; i < bufferSize; i++) {
     output[i] = Math.random() * 2 - 1;
   }
@@ -32,9 +35,11 @@ export function playCardSwish() {
 
 export function playCardSlap() {
   if (typeof window === 'undefined') return;
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-  // Low frequency thud
+  const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!AudioCtx) return;
+
+  const ctx = new AudioCtx();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
 
@@ -56,12 +61,11 @@ export function playCardSlap() {
 export function speakHinglishRoast(text: string, onEnd?: () => void) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
-  window.speechSynthesis.cancel(); // Stop ongoing audio
+  window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
   const voices = window.speechSynthesis.getVoices();
 
-  // Priority: English (India) voices
   const indianVoice = voices.find((v) => v.lang.includes('en-IN') || v.lang.includes('hi-IN'));
   if (indianVoice) {
     utterance.voice = indianVoice;
@@ -69,7 +73,7 @@ export function speakHinglishRoast(text: string, onEnd?: () => void) {
 
   utterance.rate = 1.0;
   utterance.pitch = 1.0;
-  
+
   if (onEnd) utterance.onend = onEnd;
 
   window.speechSynthesis.speak(utterance);
